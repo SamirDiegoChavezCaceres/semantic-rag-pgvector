@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "semantic-rag-pgvector"
+version = "0.1.0"
+description = "A small, honest RAG: distance-threshold retrieval and content-hash dedup over pgvector (or an in-memory store)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Samir Chavez" }]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+# Real semantic embeddings (downloads a small model on first use).
+semantic = ["sentence-transformers>=2.2"]
+# Production vector store.
+pg = ["psycopg[binary]>=3.1"]
+dev = ["pytest>=7.4"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
