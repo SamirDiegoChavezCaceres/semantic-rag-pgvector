@@ -10,9 +10,7 @@ skip:
    embedded once and shared, so a corpus with repeated passages stores far
    fewer vectors.
 
-Both ideas come from a production RAG I built over an audience-segment catalog,
-rewritten here from scratch over a neutral marketing corpus. No external code
-or data.
+The examples run over a small marketing corpus included in the repo.
 
 ## Why a threshold
 
@@ -28,7 +26,7 @@ result = rag.search("What is the capital of France?")
 if result.found:
     answer = llm(prompt + result.context)
 else:
-    answer = "Nothing in the knowledge base covers that."   # honest empty
+    answer = "Nothing in the knowledge base covers that."   # ran, found nothing
 ```
 
 If the nearest chunk is farther than `max_distance`, `found` is `False` and the
