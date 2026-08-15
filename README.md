@@ -1,5 +1,7 @@
 # semantic-rag-pgvector
 
+[![CI](https://github.com/SamirDiegoChavezCaceres/semantic-rag-pgvector/actions/workflows/ci.yml/badge.svg)](https://github.com/SamirDiegoChavezCaceres/semantic-rag-pgvector/actions/workflows/ci.yml) ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 A small Retrieval-Augmented Generation core that does two things most tutorials
 skip:
 
