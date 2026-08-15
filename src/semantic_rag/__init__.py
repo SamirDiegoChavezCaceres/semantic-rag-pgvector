@@ -1,4 +1,4 @@
-"""A small, honest RAG.
+"""A small RAG with a distance threshold and content-hash dedup.
 
 Two ideas this package exists to show:
 
