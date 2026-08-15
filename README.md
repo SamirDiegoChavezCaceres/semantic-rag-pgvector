@@ -124,6 +124,15 @@ pytest
 The suite covers the two behaviours that matter: the threshold drops an
 off-domain query, and dedup collapses identical text into one embedding.
 
+## Limitations and next steps
+
+- The distance threshold has to be recalibrated per embedder and per corpus; a
+  value tuned for one does not carry over to another.
+- The hashing embedder only shows the mechanics; real retrieval quality needs
+  sentence-transformers or OpenAI.
+- Next: rerank the top-k candidates, and support metadata filters before the
+  vector search.
+
 ## License
 
 MIT.
