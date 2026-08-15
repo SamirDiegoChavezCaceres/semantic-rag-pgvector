@@ -14,6 +14,12 @@ skip:
 
 The examples run over a small marketing corpus included in the repo.
 
+## Demo
+
+![demo](assets/demo.gif)
+
+Generate it with [VHS](https://github.com/charmbracelet/vhs): `vhs demo.tape`.
+
 ## Why a threshold
 
 A plain vector search always returns its `k` nearest neighbours, no matter how
