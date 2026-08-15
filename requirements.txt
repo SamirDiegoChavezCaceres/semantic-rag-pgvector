@@ -1,0 +1,4 @@
+# One-command setup (run from the repo root):
+#   pip install -r requirements.txt
+# Installs this package in editable mode plus the test tools.
+-e .[dev]
