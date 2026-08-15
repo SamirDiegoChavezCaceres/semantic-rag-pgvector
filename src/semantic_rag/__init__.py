@@ -11,7 +11,7 @@ Two ideas this package exists to show:
    ``NumpyStore`` / ``PgVectorStore`` and their ``stats()``.
 """
 
-from .embeddings import Embedder, HashingEmbedder, get_embedder
+from .embeddings import Embedder, HashingEmbedder, OpenAIEmbedder, get_embedder
 from .rag import RagResult, SemanticRAG
 from .store import Document, NumpyStore, SearchHit, VectorStore, content_hash
 

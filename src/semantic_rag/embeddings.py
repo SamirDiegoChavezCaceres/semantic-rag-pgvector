@@ -9,6 +9,7 @@ hosted API.
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 from typing import List, Protocol, runtime_checkable
 
@@ -92,17 +93,67 @@ class SentenceTransformerEmbedder:
         return np.asarray(vector, dtype=np.float32)
 
 
-def get_embedder(prefer: str = "auto") -> Embedder:
-    """Return an embedder.
+class OpenAIEmbedder:
+    """Embeddings from the OpenAI API (the ``openai`` extra).
 
-    ``auto`` uses sentence-transformers when it is installed and falls back to
-    the hashing embedder otherwise. Pass ``"hashing"`` to force the offline one
-    or ``"sentence-transformers"`` to require the real model.
+    Reads ``OPENAI_API_KEY`` from the environment or a local ``.env`` file.
+    Vectors are L2-normalized so the distance threshold keeps its meaning.
     """
-    if prefer in ("auto", "sentence-transformers"):
+
+    def __init__(self, model: str = None, dimensions: int = None) -> None:
+        try:
+            from dotenv import load_dotenv
+
+            load_dotenv()
+        except Exception:
+            pass
+        from openai import OpenAI  # lazy import
+
+        self._client = OpenAI()
+        self.model = model or os.getenv("OPENAI_EMBED_MODEL", "text-embedding-3-small")
+        self.dim = dimensions or int(os.getenv("OPENAI_EMBED_DIM", "1536"))
+
+    def _normalize(self, vector) -> np.ndarray:
+        vec = np.asarray(vector, dtype=np.float32)
+        norm = float(np.linalg.norm(vec))
+        return vec / norm if norm > 0 else vec
+
+    def embed_documents(self, texts: List[str]) -> List[np.ndarray]:
+        resp = self._client.embeddings.create(
+            model=self.model, input=list(texts), dimensions=self.dim
+        )
+        return [self._normalize(item.embedding) for item in resp.data]
+
+    def embed_query(self, text: str) -> np.ndarray:
+        return self.embed_documents([text])[0]
+
+
+# Strategy + Factory: each provider is one entry in this registry, and
+# get_embedder picks one by name. Adding Anthropic/Gemini later is a one-liner.
+_PROVIDERS = {
+    "openai": OpenAIEmbedder,
+    "sentence-transformers": SentenceTransformerEmbedder,
+    "hashing": HashingEmbedder,
+}
+
+
+def get_embedder(prefer: str = "auto") -> Embedder:
+    """Return an embedder by provider name.
+
+    - ``"openai"``: the OpenAI API (needs ``OPENAI_API_KEY``; see ``.env.example``).
+    - ``"sentence-transformers"``: the local model (requires the extra).
+    - ``"hashing"``: the dependency-free offline embedder.
+    - ``"auto"`` (default): sentence-transformers if installed, else hashing. It
+      never reaches for OpenAI on its own, so it cannot surprise you with a bill.
+    """
+    if prefer == "auto":
         try:
             return SentenceTransformerEmbedder()
         except Exception:
-            if prefer == "sentence-transformers":
-                raise
-    return HashingEmbedder()
+            return HashingEmbedder()
+    try:
+        return _PROVIDERS[prefer]()
+    except KeyError:
+        raise ValueError(
+            f"unknown embedder '{prefer}'; options: {', '.join(_PROVIDERS)} or 'auto'"
+        )

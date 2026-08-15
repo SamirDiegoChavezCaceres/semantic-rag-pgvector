@@ -69,7 +69,7 @@ Everything is swappable behind small interfaces:
 
 | Piece     | Default (no deps)      | Production option                  |
 |-----------|------------------------|------------------------------------|
-| Embedder  | `HashingEmbedder`      | `SentenceTransformerEmbedder`      |
+| Embedder  | `HashingEmbedder`      | `SentenceTransformerEmbedder` / `OpenAIEmbedder` |
 | Store     | `NumpyStore` (in-mem)  | `PgVectorStore` (Postgres + HNSW)  |
 
 ## Quickstart
@@ -79,11 +79,19 @@ pip install -e .            # core (numpy only)
 python scripts/demo.py      # ingest the sample corpus, run a few queries
 ```
 
-Real semantic embeddings:
+Real semantic embeddings (local model, no key):
 
 ```bash
 pip install -e ".[semantic]"
 RAG_EMBEDDER=sentence-transformers python scripts/demo.py
+```
+
+OpenAI embeddings (needs a key):
+
+```bash
+pip install -e ".[openai]"
+cp .env.example .env          # then put your OPENAI_API_KEY in .env
+RAG_EMBEDDER=openai python scripts/demo.py
 ```
 
 Production store (Postgres + pgvector):
