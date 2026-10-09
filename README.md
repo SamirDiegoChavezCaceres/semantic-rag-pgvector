@@ -18,6 +18,15 @@ The examples run over a small marketing corpus included in the repo.
 
 ![demo](assets/demo.gif)
 
+The demo (`scripts/demo.py`) runs fully offline (hashing embedder + in-memory
+store, only numpy needed) on the short texts in [`corpus/`](corpus). It (1)
+ingests the corpus, (2) runs three queries against the L2 distance threshold:
+two in-domain questions match, while *"What is the capital of France?"* returns
+*no answer* instead of a confident guess, and (3) stores one segment text under
+four country keys to show content-hash dedup collapse them to a single vector.
+The hashing embedder shows the mechanics only; set
+`RAG_EMBEDDER=sentence-transformers` (or `openai`) for real semantics.
+
 Generate it with [VHS](https://github.com/charmbracelet/vhs): `vhs demo.tape`.
 
 ## Why a threshold
