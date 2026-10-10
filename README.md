@@ -18,14 +18,14 @@ The examples run over a small marketing corpus included in the repo.
 
 ![demo](assets/demo.gif)
 
-The demo (`scripts/demo.py`) runs fully offline (hashing embedder + in-memory
-store, only numpy needed) on the short texts in [`corpus/`](corpus). It (1)
-ingests the corpus, (2) runs three queries against the L2 distance threshold:
-two in-domain questions match, while *"What is the capital of France?"* returns
-*no answer* instead of a confident guess, and (3) stores one segment text under
-four country keys to show content-hash dedup collapse them to a single vector.
-The hashing embedder shows the mechanics only; set
-`RAG_EMBEDDER=sentence-transformers` (or `openai`) for real semantics.
+The demo (`scripts/demo.py`) runs on the short texts in [`corpus/`](corpus),
+using OpenAI embeddings when `OPENAI_API_KEY` is set and an offline hashing
+embedder otherwise. It (1) ingests the corpus, (2) runs three queries against the
+L2 distance threshold: two in-domain questions match, while *"What is the capital
+of France?"* returns *no answer* instead of a confident guess, and (3) stores one
+segment text under four country keys to show content-hash dedup collapse them to
+a single vector. The in-memory store keeps it dependency-light; `PgVectorStore`
+is the Postgres path.
 
 Generate it with [VHS](https://github.com/charmbracelet/vhs): `vhs demo.tape`.
 
@@ -57,7 +57,7 @@ With L2-normalized embeddings, distance runs from 0 (identical) to ~1.41
 in-domain and out-of-domain questions and look at the gap.
 
 The gap depends heavily on the embedder. Real sentence embeddings separate
-cleanly; the offline bag-of-words fallback in this repo leaves only a narrow
+cleanly; the offline bag-of-words embedder in this repo leaves only a narrow
 band, which is itself a useful lesson: **a weak embedder makes a good threshold
 impossible.** In the original system, measured in-domain distances sat around
 0.18-0.31 and out-of-domain around 0.42-0.51, so a cut near 0.38 was safe.

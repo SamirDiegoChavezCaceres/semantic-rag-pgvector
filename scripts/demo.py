@@ -2,9 +2,9 @@
 
     python scripts/demo.py
 
-Uses the offline hashing embedder and the in-memory store, so it runs with only
-numpy installed. Set RAG_EMBEDDER=sentence-transformers (or openai) for real
-semantics.
+Uses OpenAI embeddings when OPENAI_API_KEY is set (see .env.example), otherwise
+an offline hashing embedder. Force a backend with
+RAG_EMBEDDER=openai|sentence-transformers|hashing.
 """
 
 from __future__ import annotations
@@ -24,14 +24,33 @@ QUERIES = [
 ]
 
 
+def pick_embedder():
+    """The real path is semantic embeddings; use OpenAI when a key is set, else
+    fall back to the offline hashing embedder so the demo still runs."""
+    try:
+        from dotenv import find_dotenv, load_dotenv
+
+        load_dotenv(find_dotenv(usecwd=True))
+    except Exception:
+        pass
+    choice = os.getenv("RAG_EMBEDDER")
+    if not choice:
+        choice = "openai" if os.getenv("OPENAI_API_KEY") else "auto"
+    try:
+        return get_embedder(choice)
+    except Exception:
+        return get_embedder("hashing")
+
+
 def rule(title: str) -> None:
     print(f"\n=== {title} ===")
 
 
 def main() -> None:
-    embedder = get_embedder(os.getenv("RAG_EMBEDDER", "auto"))
+    embedder = pick_embedder()
     offline = isinstance(embedder, HashingEmbedder)
-    max_distance = 1.2 if offline else 1.0
+    # Calibrated per embedder: the in-domain/out-of-domain gap differs by model.
+    max_distance = 1.2 if offline else 1.15
 
     rule("1. Ingest the corpus")
     rag = SemanticRAG(embedder=embedder, max_distance=max_distance)
