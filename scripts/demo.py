@@ -42,6 +42,40 @@ def pick_embedder():
         return get_embedder("hashing")
 
 
+def make_answerer():
+    """Return answer(query, context=None) using OpenAI, or None when offline.
+
+    With no context it is the plain model (the "without RAG" baseline). With
+    context it must answer ONLY from that context, which is what makes the
+    threshold useful: no context means no answer to invent.
+    """
+    if not os.getenv("OPENAI_API_KEY"):
+        return None
+    try:
+        from openai import OpenAI
+    except Exception:
+        return None
+    client = OpenAI()
+    model = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+    oneline = "Answer in one or two sentences on a single line, no blank lines."
+
+    def answer(query: str, context: str = None) -> str:
+        if context is None:
+            messages = [{"role": "system", "content": oneline},
+                        {"role": "user", "content": query}]
+        else:
+            messages = [
+                {"role": "system", "content":
+                 "Answer the question using ONLY the context. If the context does "
+                 "not contain the answer, say you don't know. " + oneline},
+                {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {query}"},
+            ]
+        resp = client.chat.completions.create(model=model, temperature=0, messages=messages)
+        return (resp.choices[0].message.content or "").strip()
+
+    return answer
+
+
 def rule(title: str) -> None:
     print(f"\n=== {title} ===")
 
@@ -59,16 +93,23 @@ def main() -> None:
     print(f"ingested : {n} chunks from {CORPUS.name}/")
     print(f"threshold: L2 distance <= {max_distance}")
 
-    rule("2. Retrieval with a threshold")
+    rule("2. Same question: model alone vs grounded on retrieval")
+    answer = make_answerer()
     for query, kind in QUERIES:
         result = rag.search(query, k=3)
+        print(f"[{kind:10}] {query}")
+        if answer:
+            print(f"             without RAG: {answer(query)}")
         if result.found:
             hit = result.hits[0]
-            print(f"[{kind:10}] {query}")
-            print(f"             -> match in {hit.metadata.get('source')} (distance {hit.distance:.3f})")
+            src = f"{hit.metadata.get('source')}, d={hit.distance:.3f}"
+            grounded = answer(query, result.context) if answer else "(retrieved context ready)"
+            print(f"             with RAG   : {grounded}  [{src}]")
         else:
-            print(f"[{kind:10}] {query}")
-            print(f"             -> no answer ({result.message})")
+            print(f"             with RAG   : I don't know, the knowledge base does not cover that.")
+            print(f"                          (nearest chunk past the threshold: {result.message})")
+    if not answer:
+        print("  (set OPENAI_API_KEY to generate both answers and see the contrast)")
 
     rule("3. Dedup: the same text across keys is embedded once")
     store = NumpyStore()

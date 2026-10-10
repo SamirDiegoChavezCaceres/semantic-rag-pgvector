@@ -20,12 +20,14 @@ The examples run over a small marketing corpus included in the repo.
 
 The demo (`scripts/demo.py`) runs on the short texts in [`corpus/`](corpus),
 using OpenAI embeddings when `OPENAI_API_KEY` is set and an offline hashing
-embedder otherwise. It (1) ingests the corpus, (2) runs three queries against the
-L2 distance threshold: two in-domain questions match, while *"What is the capital
-of France?"* returns *no answer* instead of a confident guess, and (3) stores one
-segment text under four country keys to show content-hash dedup collapse them to
-a single vector. The in-memory store keeps it dependency-light; `PgVectorStore`
-is the Postgres path.
+embedder otherwise. It (1) ingests the corpus, (2) answers each query twice,
+**without RAG** (the model alone) and **with RAG** (grounded on the retrieved
+chunk), so you see the difference: the grounded answer uses the knowledge base's
+own wording, and for *"What is the capital of France?"* the model alone replies
+"Paris" while RAG says *"I don't know"* because nothing cleared the distance
+threshold, and (3) stores one segment text under four country keys to show
+content-hash dedup collapse them to a single vector. The in-memory store keeps it
+dependency-light; `PgVectorStore` is the Postgres path.
 
 Generate it with [VHS](https://github.com/charmbracelet/vhs): `vhs demo.tape`.
 
